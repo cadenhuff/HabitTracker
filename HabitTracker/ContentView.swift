@@ -14,9 +14,18 @@ struct ContentView: View {
     var body: some View {
         NavigationStack{
             List{
-                Section("Habits"){
+                Section(){
+                    
                     ForEach(habits.items){item in
-                        Text("\(item.name)")
+                        //want to order by urgency
+                        Button(action: {
+                            
+                        }, label: {
+                            HabitRowView(habit: item)
+                                
+                        })
+                        //Dont' this is the best solve for the text color problem
+                        .foregroundColor(.black)
                     }
                 }
             }
@@ -35,7 +44,24 @@ struct ContentView: View {
     }
 }
 
-struct Habit:Identifiable, Codable{
+struct HabitRowView: View{
+    var habit: HabitItem
+    
+    var body: some View{
+        HStack{
+            Text("\(habit.name)")
+            Spacer()
+            Text("\(habit.urgency)")
+            
+            
+        }
+    }
+    
+    
+}
+
+
+struct HabitItem:Identifiable, Codable{
     let name:String
     let description:String
     let urgency:Int
@@ -43,8 +69,8 @@ struct Habit:Identifiable, Codable{
     
 }
 class Habits: ObservableObject{
-    @Published var items = [Habit]()
-    init(items: [Habit] = [Habit]()) {
+    @Published var items = [HabitItem]()
+    init(items: [HabitItem] = [HabitItem]()) {
         self.items = items
     }
 }
