@@ -10,22 +10,33 @@ import SwiftUI
 struct ContentView: View {
     @StateObject var habits = Habits()
     @State private var showingAdd = false
-
+    @State private var completedHabits = [HabitItem]()
     var body: some View {
         NavigationStack{
             List{
-                Section(){
+                Section(header:
+                    habits.items.isEmpty ? Text("") :
+                            Text("Habits")
+                ){
                     
                     ForEach(habits.items){item in
                         //want to order by urgency
                         Button(action: {
-                            
+                            HabitView()
                         }, label: {
                             HabitRowView(habit: item)
                                 
                         })
                         //Dont' this is the best solve for the text color problem
                         .foregroundColor(.black)
+                    }
+                    .onDelete(perform: removeItems)
+                }
+                Section(header:
+                    completedHabits.isEmpty ? Text("") : Text("Completed")
+                ) {
+                    ForEach(completedHabits) { habit in
+                        /*@START_MENU_TOKEN@*/Text(habit.name)/*@END_MENU_TOKEN@*/
                     }
                 }
             }
@@ -41,6 +52,12 @@ struct ContentView: View {
                 AddView(habits: habits)
             })
         }
+    }
+    func removeItems(at offsets: IndexSet){
+        let removedItems = offsets.lazy.map { habits.items[$0] }
+        completedHabits.append(contentsOf: removedItems)
+        habits.items.remove(atOffsets: offsets)
+        
     }
 }
 
@@ -69,9 +86,23 @@ struct HabitItem:Identifiable, Codable{
     
 }
 class Habits: ObservableObject{
-    @Published var items = [HabitItem]()
-    init(items: [HabitItem] = [HabitItem]()) {
-        self.items = items
+    @Published var items = [HabitItem](){
+        didSet{
+            if let encoded = try? JSONEncoder().encode(items){
+                UserDefaults.standard.set(encoded, forKey: "Items")
+            }
+        }
+    }
+    
+    
+    init(){
+        if let savedItems = UserDefaults.standard.data(forKey: "Items"){
+            if let decodedItems = try? JSONDecoder().decode([HabitItem].self, from: savedItems){
+                items = decodedItems
+                return
+            }
+        }
+        items = []
     }
 }
 
